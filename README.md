@@ -4,7 +4,7 @@ A comprehensive bash script for maintaining and optimizing Arch Linux systems.
 
 ## Features
 
-- System updates (`paru -Syu`)
+- System updates (`paru` or `yay`)
 - Pacman cache cleanup (`paccache -r`)
 - Orphan package removal
 - Home directory cache cleanup
@@ -17,7 +17,7 @@ A comprehensive bash script for maintaining and optimizing Arch Linux systems.
 ## Requirements
 
 - Arch Linux (or Arch-based distribution)
-- `paru` AUR helper
+- `paru` or `yay` AUR helper
 - `paccache` (part of `pacman-contrib` package)
 - `journalctl` (part of `systemd`)
 
