@@ -115,20 +115,55 @@ confirm() {
 # Print header
 print_header
 
-# Check required commands
 print_section "Checking Requirements"
-check_command paru
+if ! command -v paru &>/dev/null && ! command -v yay &>/dev/null; then
+    print_error "Neither paru nor yay is installed. Please install one of them."
+    exit 1
+fi
 check_command paccache
 check_command journalctl
 print_success "All required commands are available"
 
+# Function to detect available AUR helper
+get_aur_helper() {
+    if command_exists paru; then
+        echo "paru"
+    elif command_exists yay; then
+        echo "yay"
+    else
+        print_error "No AUR helper (paru or yay) is installed. Please install one first."
+        exit 1
+    fi
+}
+
+# Function to check if a command exists (returns 0 if found, 1 if not)
+command_exists() {
+    command -v "$1" &> /dev/null
+}
+
 # System update
 print_section "System Update"
 log "Starting system maintenance"
-if ! paru -Syu; then
+if ! get_aur_helper -Syu; then
     print_error "System update failed"
     log "Error: System update failed"
     exit 1
+fi
+
+# Flatpak update
+print_section "Flatpak Maintenance"
+log "Updating Flatpak packages"
+if command -v flatpak &> /dev/null; then
+    if ! flatpak update -y; then
+        print_error "Flatpak update failed"
+        log "Error: Flatpak update failed"
+    else
+        print_success "Flatpak packages updated successfully"
+        log "Flatpak packages updated successfully"
+    fi
+else
+    print_info "Flatpak is not installed; skipping Flatpak update"
+    log "Flatpak is not installed; skipping Flatpak update"
 fi
 print_success "System updated successfully"
 
@@ -147,12 +182,12 @@ print_info "Space saved: $pacman_cache_space_used"
 # Remove orphan packages
 print_section "Package Maintenance"
 log "Checking for orphan packages"
-orphans=$(paru -Qdtq || true)
+orphans=$(get_aur_helper -Qdtq || true)
 if [ -n "$orphans" ]; then
     print_warning "Found orphan packages:"
     echo -e "${DIM}$orphans${NC}"
     if confirm "Do you want to remove these orphan packages?"; then
-        if ! paru -Qdtq | paru -Rns -; then
+        if ! get_aur_helper -Qdtq | get_aur_helper -Rns -; then
             print_error "Failed to remove orphan packages"
             log "Error: Failed to remove orphan packages"
             exit 1
